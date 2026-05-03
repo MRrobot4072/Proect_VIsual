@@ -1,0 +1,16 @@
+--- Lugovkin_JobTracker/data/operation_log.csv (原始)
+
+
++++ Lugovkin_JobTracker/data/operation_log.csv (修改后)
+timestamp,operation,details,user
+2025-01-10T10:00:00,LOAD_DATA,Loaded vacancies.json and applications.json,system
+2025-01-11T09:00:00,APPLY,Applied to vacancy V0001 (Python Developer at TechCorp),user
+2025-01-13T14:00:00,STATUS_UPDATE,Application APP0001 status changed to interview,system
+2025-01-14T10:00:00,APPLY,Applied to vacancy V0002 (Senior Python Engineer at DataSoft),user
+2025-01-16T11:00:00,APPLY,Applied to vacancy V0003 (Python Backend Developer at WebStudio),user
+2025-01-18T16:00:00,REJECT,Application APP0003 rejected - не хватило опыта работы с Flask,system
+2025-01-20T16:00:00,APPLY,Applied to vacancy V0005 (Junior Python Developer at StartUp Hub),user
+2025-01-21T09:00:00,APPLY,Applied to vacancy V0007 (Python ML Engineer at AI Solutions),user
+2025-01-24T10:00:00,STATUS_UPDATE,Application APP0005 status changed to viewed,system
+2025-01-24T12:00:00,OFFER,Application APP0004 received offer,system
+2025-01-25T10:30:00,EXPORT_EXCEL,Exported analytics report to data/analytics_report.xlsx,user
