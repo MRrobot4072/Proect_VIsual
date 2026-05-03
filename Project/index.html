@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Агрегатор вакансий и Трекер поиска работы</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* Навигация */
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-tab:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .nav-tab.active {
+            background: white;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        /* Секции */
+        .section {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        /* Карточки вакансий */
+        .vacancy-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .vacancy-card:hover {
+            transform: translateX(10px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .vacancy-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .vacancy-card .company {
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .vacancy-card .details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .vacancy-card .detail-item {
+            background: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .vacancy-card .salary {
+            color: #28a745;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .vacancy-card .skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .skill-tag {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+        }
+
+        /* Kanban доска для откликов */
+        .kanban-board {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .kanban-column {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 15px;
+        }
+
+        .kanban-column h3 {
+            text-align: center;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .kanban-column.submitted h3 { background: #17a2b8; }
+        .kanban-column.viewed h3 { background: #ffc107; color: #333; }
+        .kanban-column.interview h3 { background: #fd7e14; }
+        .kanban-column.rejected h3 { background: #dc3545; }
+        .kanban-column.offer h3 { background: #28a745; }
+
+        .kanban-item {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .kanban-item h4 {
+            color: #333;
+            font-size: 0.95rem;
+            margin-bottom: 5px;
+        }
+
+        .kanban-item .company-name {
+            color: #667eea;
+            font-size: 0.85rem;
+        }
+
+        .kanban-item .days-waiting {
+            font-size: 0.8rem;
+            color: #999;
+            margin-top: 8px;
+        }
+
+        /* Аналитика */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-card .value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* Таблицы */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            background: #5a6fd6;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* Фильтры */
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .filters input, .filters select {
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .filters input:focus, .filters select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            background: #5a6fd6;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            .nav-tabs {
+                gap: 5px;
+            }
+
+            .nav-tab {
+                padding: 10px 16px;
+                font-size: 0.9rem;
+            }
+
+            .section {
+                padding: 20px;
+            }
+
+            .kanban-board {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 Агрегатор вакансий</h1>
+            <p>Трекер поиска работы и аналитика рынка труда</p>
+        </header>
+
+        <!-- Навигация -->
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-section="vacancies">📋 Вакансии</button>
+            <button class="nav-tab" data-section="applications">📬 Мои отклики</button>
+            <button class="nav-tab" data-section="analytics">📊 Аналитика</button>
+        </nav>
+
+        <!-- Секция: Вакансии -->
+        <section id="vacancies" class="section active">
+            <h2>Лента вакансий</h2>
+
+            <div class="filters">
+                <input type="text" id="searchKeyword" placeholder="Поиск по ключевым словам...">
+                <select id="filterCity">
+                    <option value="">Все города</option>
+                    <option value="Москва">Москва</option>
+                    <option value="Санкт-Петербург">Санкт-Петербург</option>
+                    <option value="Екатеринбург">Екатеринбург</option>
+                    <option value="Казань">Казань</option>
+                    <option value="Новосибирск">Новосибирск</option>
+                </select>
+                <select id="filterExperience">
+                    <option value="">Любой опыт</option>
+                    <option value="no-experience">Без опыта</option>
+                    <option value="junior">Junior</option>
+                    <option value="middle">Middle</option>
+                    <option value="senior">Senior</option>
+                    <option value="lead">Lead</option>
+                </select>
+                <input type="number" id="minSalary" placeholder="Мин. зарплата">
+                <button class="filter-btn" onclick="applyFilters()">Применить</button>
+            </div>
+
+            <div id="vacanciesList"></div>
+        </section>
+
+        <!-- Секция: Отклики (Kanban) -->
+        <section id="applications" class="section">
+            <h2>Трекер откликов (Kanban)</h2>
+            <div class="kanban-board" id="kanbanBoard"></div>
+        </section>
+
+        <!-- Секция: Аналитика -->
+        <section id="analytics" class="section">
+            <h2>Аналитика рынка</h2>
+
+            <div class="analytics-grid">
+                <div class="stat-card">
+                    <div class="value" id="totalVacancies">0</div>
+                    <div class="label">Всего вакансий</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="avgSalary">0</div>
+                    <div class="label">Средняя зарплата</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="totalApplications">0</div>
+                    <div class="label">Всего откликов</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" id="successRate">0%</div>
+                    <div class="label">Успешность</div>
+                </div>
+            </div>
+
+            <h3>Топ работодателей</h3>
+            <table id="employersTable">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable('employersTable', 0)">Компания</th>
+                        <th onclick="sortTable('employersTable', 1)">Вакансий</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+            <h3 style="margin-top: 30px;">Востребованные навыки</h3>
+            <table id="skillsTable">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable('skillsTable', 0)">Навык</th>
+                        <th onclick="sortTable('skillsTable', 1)">Упоминаний</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </section>
+    </div>
+
+    <script>
+        // Данные из JSON (встроены для демонстрации)
+        const vacanciesData = [
+            {"vacancy_id": "V0001", "title": "Python Developer", "company": "TechCorp", "salary_min": 120000, "salary_max": 180000, "city": "Москва", "employment_type": "full-time", "experience_level": "middle", "skills": ["Python", "Django", "PostgreSQL", "Docker"], "description": "Разработка веб-приложений на Python"},
+            {"vacancy_id": "V0002", "title": "Senior Python Engineer", "company": "DataSoft", "salary_min": 200000, "salary_max": 300000, "city": "Санкт-Петербург", "employment_type": "remote", "experience_level": "senior", "skills": ["Python", "FastAPI", "Docker", "Kubernetes", "AWS"], "description": "Разработка микросервисов"},
+            {"vacancy_id": "V0003", "title": "Python Backend Developer", "company": "WebStudio", "salary_min": 100000, "salary_max": 150000, "city": "Москва", "employment_type": "full-time", "experience_level": "junior", "skills": ["Python", "Flask", "MySQL", "Redis"], "description": "Backend разработка"},
+            {"vacancy_id": "V0004", "title": "Python Data Analyst", "company": "AnalyticsPro", "salary_min": 90000, "salary_max": 140000, "city": "Екатеринбург", "employment_type": "part-time", "experience_level": "middle", "skills": ["Python", "Pandas", "NumPy", "SQL"], "description": "Анализ данных"},
+            {"vacancy_id": "V0005", "title": "Junior Python Developer", "company": "StartUp Hub", "salary_min": 60000, "salary_max": 90000, "city": "Казань", "employment_type": "internship", "experience_level": "no-experience", "skills": ["Python", "Git", "Linux"], "description": "Стажировка"},
+            {"vacancy_id": "V0006", "title": "Python Team Lead", "company": "BigTech Corp", "salary_min": 280000, "salary_max": 400000, "city": "Москва", "employment_type": "full-time", "experience_level": "lead", "skills": ["Python", "Team Management", "Architecture"], "description": "Руководство командой"},
+            {"vacancy_id": "V0007", "title": "Python ML Engineer", "company": "AI Solutions", "salary_min": 180000, "salary_max": 250000, "city": "Санкт-Петербург", "employment_type": "remote", "experience_level": "senior", "skills": ["Python", "TensorFlow", "PyTorch", "MLOps"], "description": "ML разработка"},
+            {"vacancy_id": "V0008", "title": "Python DevOps Engineer", "company": "CloudFirst", "salary_min": 160000, "salary_max": 220000, "city": "Новосибирск", "employment_type": "full-time", "experience_level": "middle", "skills": ["Python", "Docker", "Kubernetes", "CI/CD"], "description": "DevOps задачи"}
+        ];
+
+        const applicationsData = [
+            {"application_id": "APP0001", "vacancy": {"title": "Python Developer", "company": "TechCorp"}, "status": "interview", "applied_date": "2025-01-11", "response_date": "2025-01-13", "notes": "Собеседование прошло хорошо"},
+            {"application_id": "APP0002", "vacancy": {"title": "Senior Python Engineer", "company": "DataSoft"}, "status": "submitted", "applied_date": "2025-01-14", "response_date": null, "notes": "Жду ответа"},
+            {"application_id": "APP0003", "vacancy": {"title": "Python Backend Developer", "company": "WebStudio"}, "status": "rejected", "applied_date": "2025-01-16", "response_date": "2025-01-18", "notes": "Отказ - не хватило опыта"},
+            {"application_id": "APP0004", "vacancy": {"title": "Junior Python Developer", "company": "StartUp Hub"}, "status": "offer", "applied_date": "2025-01-21", "response_date": "2025-01-24", "notes": "Получил оффер!"},
+            {"application_id": "APP0005", "vacancy": {"title": "Python ML Engineer", "company": "AI Solutions"}, "status": "viewed", "applied_date": "2025-01-23", "response_date": "2025-01-24", "notes": "Резюме просмотрено"}
+        ];
+
+        let filteredVacancies = [...vacanciesData];
+
+        // Навигация между секциями
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.section).classList.add('active');
+            });
+        });
+
+        // Рендер вакансий
+        function renderVacancies(vacancies) {
+            const container = document.getElementById('vacanciesList');
+            container.innerHTML = '';
+
+            vacancies.forEach(v => {
+                const avgSalary = ((v.salary_min + v.salary_max) / 2).toLocaleString();
+                const card = document.createElement('div');
+                card.className = 'vacancy-card';
+                card.innerHTML = `
+                    <h3>${v.title}</h3>
+                    <div class="company">${v.company}</div>
+                    <div class="details">
+                        <span class="detail-item">📍 ${v.city}</span>
+                        <span class="detail-item">💼 ${v.experience_level}</span>
+                        <span class="detail-item">📅 ${v.employment_type}</span>
+                        <span class="salary">💰 ${avgSalary} руб.</span>
+                    </div>
+                    <div class="skills">${v.skills.map(s => `<span class="skill-tag">${s}</span>`).join('')}</div>
+                `;
+                container.appendChild(card);
+            });
+
+            if (vacancies.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:#999;">Вакансии не найдены</p>';
+            }
+        }
+
+        // Фильтрация
+        function applyFilters() {
+            const keyword = document.getElementById('searchKeyword').value.toLowerCase();
+            const city = document.getElementById('filterCity').value;
+            const experience = document.getElementById('filterExperience').value;
+            const minSalary = parseFloat(document.getElementById('minSalary').value) || 0;
+
+            filteredVacancies = vacanciesData.filter(v => {
+                const avgSalary = (v.salary_min + v.salary_max) / 2;
+                const matchesKeyword = !keyword || v.title.toLowerCase().includes(keyword) ||
+                    v.description.toLowerCase().includes(keyword) ||
+                    v.skills.some(s => s.toLowerCase().includes(keyword));
+                const matchesCity = !city || v.city === city;
+                const matchesExperience = !experience || v.experience_level === experience;
+                const matchesSalary = avgSalary >= minSalary;
+
+                return matchesKeyword && matchesCity && matchesExperience && matchesSalary;
+            });
+
+            renderVacancies(filteredVacancies);
+        }
+
+        // Рендер Kanban доски
+        function renderKanban() {
+            const board = document.getElementById('kanbanBoard');
+            const statuses = {
+                submitted: { title: 'Отправлено', class: 'submitted' },
+                viewed: { title: 'Просмотрено', class: 'viewed' },
+                interview: { title: 'Собеседование', class: 'interview' },
+                rejected: { title: 'Отказ', class: 'rejected' },
+                offer: { title: 'Оффер', class: 'offer' }
+            };
+
+            board.innerHTML = '';
+
+            Object.entries(statuses).forEach(([status, config]) => {
+                const apps = applicationsData.filter(a => a.status === status);
+                const column = document.createElement('div');
+                column.className = `kanban-column ${config.class}`;
+
+                let itemsHtml = apps.map(app => {
+                    const appliedDate = new Date(app.applied_date);
+                    const daysWaiting = Math.floor((new Date() - appliedDate) / (1000 * 60 * 60 * 24));
+                    return `
+                        <div class="kanban-item">
+                            <h4>${app.vacancy.title}</h4>
+                            <div class="company-name">${app.vacancy.company}</div>
+                            <div class="days-waiting">⏱️ ${daysWaiting} дн.</div>
+                        </div>
+                    `;
+                }).join('');
+
+                column.innerHTML = `
+                    <h3>${config.title} (${apps.length})</h3>
+                    ${itemsHtml}
+                `;
+                board.appendChild(column);
+            });
+        }
+
+        // Рендер аналитики
+        function renderAnalytics() {
+            // Статистика
+            document.getElementById('totalVacancies').textContent = vacanciesData.length;
+
+            const avgSalary = vacanciesData.reduce((sum, v) => sum + (v.salary_min + v.salary_max) / 2, 0) / vacanciesData.length;
+            document.getElementById('avgSalary').textContent = Math.round(avgSalary).toLocaleString();
+
+            document.getElementById('totalApplications').textContent = applicationsData.length;
+
+            const offers = applicationsData.filter(a => a.status === 'offer').length;
+            const successRate = Math.round((offers / applicationsData.length) * 100);
+            document.getElementById('successRate').textContent = successRate + '%';
+
+            // Топ работодателей
+            const employerCount = {};
+            vacanciesData.forEach(v => {
+                employerCount[v.company] = (employerCount[v.company] || 0) + 1;
+            });
+            const sortedEmployers = Object.entries(employerCount).sort((a, b) => b[1] - a[1]);
+
+            document.querySelector('#employersTable tbody').innerHTML = sortedEmployers.slice(0, 5).map(([company, count]) =>
+                `<tr><td>${company}</td><td>${count}</td></tr>`
+            ).join('');
+
+            // Востребованные навыки
+            const skillsCount = {};
+            vacanciesData.forEach(v => {
+                v.skills.forEach(s => {
+                    skillsCount[s] = (skillsCount[s] || 0) + 1;
+                });
+            });
+            const sortedSkills = Object.entries(skillsCount).sort((a, b) => b[1] - a[1]);
+
+            document.querySelector('#skillsTable tbody').innerHTML = sortedSkills.slice(0, 10).map(([skill, count]) =>
+                `<tr><td>${skill}</td><td>${count}</td></tr>`
+            ).join('');
+        }
+
+        // Сортировка таблиц
+        function sortTable(tableId, colIndex) {
+            const table = document.getElementById(tableId);
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            rows.sort((a, b) => {
+                const aVal = a.cells[colIndex].textContent;
+                const bVal = b.cells[colIndex].textContent;
+
+                const aNum = parseFloat(aVal.replace(/\s/g, ''));
+                const bNum = parseFloat(bVal.replace(/\s/g, ''));
+
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    return bNum - aNum;
+                }
+                return aVal.localeCompare(bVal, 'ru');
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        // Инициализация
+        renderVacancies(vacanciesData);
+        renderKanban();
+        renderAnalytics();
+    </script>
+</body>
+</html>
