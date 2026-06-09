@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0"><i class="fas fa-{{ 'edit' if appeal else 'plus' }}"></i> {{ 'Редактирование' if appeal else 'Новое обращение' }}</h4>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+           <h5>Данные гражданина</h5>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label class="form-label">Фамилия *</label>
+                        <input type="text" name="last_name" class="form-control" value="{{ appeal.last_name if appeal else '' }}" required pattern="[A-Za-zА-Яа-яЁё\-\s]+" title="Только буквы, дефис и пробел">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Имя *</label>
+                        <input type="text" name="first_name" class="form-control" value="{{ appeal.first_name if appeal else '' }}" required pattern="[A-Za-zА-Яа-яЁё\-\s]+" title="Только буквы, дефис и пробел">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Отчество</label>
+                        <input type="text" name="middle_name" class="form-control" value="{{ appeal.middle_name if appeal else '' }}" pattern="[A-Za-zА-Яа-яЁё\-\s]*" title="Только буквы, дефис и пробел (необязательно)">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Телефон *</label>
+                        <input type="tel" name="phone" class="form-control" value="{{ appeal.phone if appeal else '' }}" required pattern="[\+\d\s\-\(\)]{10,15}" title="Формат: +79991234567, 8-912-345-67-89, (912)3456789">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" value="{{ appeal.email if appeal else '' }}">
+                    </div>
+                </div>
+
+            <h5>Данные обращения</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label">Категория *</label>
+                    <select name="category" class="form-select" required>
+                        {% for cat in categories %}
+                        <option value="{{ cat }}" {% if appeal and appeal.category == cat %}selected{% endif %}>{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% if appeal and statuses %}
+                <div class="col-md-6">
+                    <label class="form-label">Статус *</label>
+                    <select name="status" class="form-select" required>
+                        {% for st in statuses %}
+                        <option value="{{ st }}" {% if appeal.status == st %}selected{% endif %}>{{ st }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                <div class="col-12">
+                    <label class="form-label">Описание проблемы *</label>
+                    <textarea name="description" class="form-control" rows="4" required>{{ appeal.description if appeal else '' }}</textarea>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a href="{{ url_for('appeals') }}" class="btn btn-secondary">Отмена</a>
+                <button type="submit" class="btn btn-primary">{{ 'Сохранить' if appeal else 'Добавить' }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

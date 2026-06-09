@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2><i class="fas fa-chart-pie"></i> Аналитические отчёты</h2>
+
+<div class="row mb-4">
+    <div class="col text-end">
+        <a href="{{ url_for('export_csv') }}" class="btn btn-success"><i class="fas fa-download"></i> Экспорт в CSV</a>
+    </div>
+</div>
+
+<!-- Карточки статистики -->
+<div class="row mb-4">
+    <div class="col-md-2"><div class="card text-center"><div class="card-body"><h3>{{ total.total }}</h3><span class="text-muted">Всего обращений</span></div></div></div>
+    <div class="col-md-2"><div class="card text-center"><div class="card-body"><h3>{{ total.primary }}</h3><span class="text-muted">Первичных</span></div></div></div>
+    <div class="col-md-2"><div class="card text-center"><div class="card-body"><h3>{{ total.repeat }}</h3><span class="text-muted">Повторных</span></div></div></div>
+    <div class="col-md-2"><div class="card text-center"><div class="card-body"><h3>{{ total.unique_citizens }}</h3><span class="text-muted">Уникальных граждан</span></div></div></div>
+    <div class="col-md-2"><div class="card text-center"><div class="card-body"><h3>{{ total.repeat_percent }}%</h3><span class="text-muted">% повторов</span></div></div></div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">📁 По категориям сервисов</div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Категория</th><th>Всего</th><th>Повторных</th><th>%</th></tr></thead>
+                    <tbody>
+                        {% for row in categories %}
+                        <tr><td>{{ row.category }}</td><td>{{ row.total }}</td><td>{{ row.repeat_count }}</td><td>{{ (row.repeat_count / row.total * 100)|round(1) if row.total else 0 }}%</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">📋 По статусам</div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Статус</th><th>Количество</th><th>Доля</th></tr></thead>
+                    <tbody>
+                        {% set total_status = statuses|sum(attribute='count') %}
+                        {% for row in statuses %}
+                        <tr><td>{{ row.status }}</td><td>{{ row.count }}</td><td>{{ (row.count / total_status * 100)|round(1) if total_status else 0 }}%</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">⚠️ Причины повторных обращений</div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Причина</th><th>Количество</th><th>Доля</th></tr></thead>
+                    <tbody>
+                        {% set total_reasons = reasons|sum(attribute='count') %}
+                        {% for row in reasons %}
+                        <tr><td>{{ row.reason }}</td><td>{{ row.count }}</td><td>{{ (row.count / total_reasons * 100)|round(1) if total_reasons else 0 }}%</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">📈 Динамика за 7 дней</div>
+            <div class="card-body">
+                <canvas id="dailyChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const dailyData = {{ daily|tojson }};
+    const labels = dailyData.map(d => new Date(d.day).toLocaleDateString('ru-RU'));
+    const counts = dailyData.map(d => d.count);
+    new Chart(document.getElementById('dailyChart'), {
+        type: 'line',
+        data: { labels: labels, datasets: [{ label: 'Количество обращений', data: counts, borderColor: '#2563eb', tension: 0.1 }] },
+        options: { responsive: true, maintainAspectRatio: true }
+    });
+</script>
+{% endblock %}
